@@ -162,8 +162,9 @@ function findBestWay() {
 
   let cellsInTurn = [[x, y]];
   let turn = 1;
+  f();
 
-  while (cellsInTurn.length) {
+  function f() {
     let workArray = [];
     cellsInTurn.forEach(cell => {
       let x = cell[0];
@@ -173,12 +174,16 @@ function findBestWay() {
     });
     turn++;
     cellsInTurn = workArray;
-  }
 
-  if (canReach) {
-    drawBackWay(table);
-  } else {
-    alert('no way');
+    if (cellsInTurn.length) {
+      setTimeout(f, 200);
+    } else {
+      if (canReach) {
+        drawBackWay(table);
+      } else {
+        alert('no way');
+      }
+    }
   }
 }
 
