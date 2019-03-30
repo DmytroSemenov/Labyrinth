@@ -1,5 +1,5 @@
 'use strict';
-const INIT_SETTINGS = { xSize: 10, ySize: 10, startX: 1, startY: 1 };
+
 const LEGEND = {
   s: 'cell__start',
   f: 'cell__finish',
@@ -7,6 +7,7 @@ const LEGEND = {
   r: 'cell__route'
 };
 
+const INIT_SETTINGS = { xSize: 10, ySize: 10 };
 const INIT_MAZE = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -22,16 +23,13 @@ const INIT_MAZE = [
 const maze = INIT_MAZE.slice();
 const startCell = { x: 0, y: 2 };
 const finishCell = { x: 7, y: 7 };
+
 let changeSell = changeWall;
 let canReach = false;
 
 window.addEventListener('load', init);
 
 function init() {
-  createField();
-}
-
-function createField() {
   createMaze();
   createButtons();
 }
@@ -39,8 +37,10 @@ function createField() {
 function createMaze() {
   const mazePlace = document.getElementById('gameTable');
   const table = document.createElement('table');
+
   for (let y = 0; y < INIT_SETTINGS.ySize; y++) {
     const tr = document.createElement('tr');
+
     for (let x = 0; x < INIT_SETTINGS.xSize; x++) {
       const td = document.createElement('td');
 
@@ -60,8 +60,10 @@ function createMaze() {
 
       tr.append(td);
     }
+
     table.append(tr);
   }
+
   mazePlace.append(table);
   table.addEventListener('mousedown', event => {
     changeSell(event);
@@ -156,8 +158,7 @@ function changeFinish(event) {
 
 function findBestWay() {
   const table = document.getElementById('gameTable').firstChild;
-  let x = startCell.x;
-  let y = startCell.y;
+  let { x, y } = startCell;
 
   let cellsInTurn = [[x, y]];
   let turn = 1;
@@ -187,7 +188,7 @@ function oneMove(table, x, y, turn) {
   simpleMove(table, x, y + 1, turn, currentTurn);
   simpleMove(table, x - 1, y, turn, currentTurn);
   simpleMove(table, x + 1, y, turn, currentTurn);
-  
+
   return currentTurn;
 }
 
