@@ -1,114 +1,147 @@
 'use strict';
-const SETTINGS = {
-  rows: 10,
-  cols: 10,
-  cellState: {
-    free: 0,
-    wall: 1,
-    start: 2,
-    finish: 3,
-    visited: 4
-  },
-  cellClass: ['cell', 'wall', 'start', 'finish']
+const INIT_SETTINGS = { xSize: 10, ySize: 10, startX: 1, startY: 1 };
+const LEGEND = {
+  s: 'cell__start',
+  f: 'cell__finish',
+  w: 'cell__wall',
+  r: 'cell__route'
 };
 
-const startCell = [1, 2];
-let $cellElements = [];
-
-let matrix = [
-  [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-  [0, 2, 0, 1, 0, 0, 0, 1, 0, 0],
-  [0, 0, 0, 1, 1, 1, 1, 1, 0, 0],
-  [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
-  [0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
-  [0, 0, 1, 1, 1, 1, 0, 1, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 1, 3, 0],
-  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+const INIT_MAZE = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  ['s', 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 'w', 'w', 'w', 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 'f', 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
+const maze = INIT_MAZE.slice();
+const startCell = { x: 0, y: 2 };
+const finishCell = { x: 7, y: 7 };
+let changeSell = function() {};
 
 window.addEventListener('load', init);
 
 function init() {
-  let matrixCopy = matrix.slice();
-
-  buildMaze(matrixCopy);
-  findExit(matrixCopy);
+  create_field();
 }
 
-function buildMaze(matrix) {
-  let $container = document.getElementById('gameTable');
+function create_field() {
+  createMaze();
+  createButtons();
+}
 
-  for (let i = 0; i < SETTINGS.rows; i++) {
-    for (let j = 0; j < SETTINGS.cols; j++) {
-      let cell = matrix[i][j];
-      let $cellEl = document.createElement('div');
-
-      $cellEl.classList.add(SETTINGS.cellClass[0], SETTINGS.cellClass[cell]);
-      $container.appendChild($cellEl);
-      $cellElements.push($cellEl);
+function createMaze() {
+  const mazePlace = document.getElementById('gameTable');
+  const table = document.createElement('table');
+  for (let y = 0; y < INIT_SETTINGS.ySize; y++) {
+    const tr = document.createElement('tr');
+    for (let x = 0; x < INIT_SETTINGS.xSize; x++) {
+      const td = document.createElement('td');
+      if (typeof maze[y][x] !== 'number') {
+        if (maze[y][x] === 's') {
+          startCell.element = td;
+        }
+        if (maze[y][x] === 'f') {
+          finishCell.element = td;
+        }
+        td.className = LEGEND[maze[y][x]];
+      }
+      tr.append(td);
     }
+    table.append(tr);
+  }
+  mazePlace.append(table);
+  table.addEventListener('mousedown', event => {
+    changeSell(event);
+  }); //
+}
+
+function createButtons() {
+  const menu = document.querySelector('.menu');
+  const setStart = document.createElement('button');
+  setStart.innerHTML = 'Set start';
+  menu.append(setStart);
+  setStart.addEventListener('click', () => {
+    changeSell = changeStart;
+  });
+
+  const setFinish = document.createElement('button');
+  setFinish.innerHTML = 'Set finish';
+  menu.append(setFinish);
+  setFinish.addEventListener('click', () => {
+    changeSell = changeFinish;
+  });
+
+  const setWall = document.createElement('button');
+  setWall.innerHTML = 'Set wall';
+  menu.append(setWall);
+  setWall.addEventListener('click', () => {
+    changeSell = changeWall;
+  });
+
+  const startSearh = document.createElement('button');
+  startSearh.innerHTML = 'Find way';
+  menu.append(startSearh);
+}
+
+function changeWall(event) {
+  const $el = event.target;
+  let x = $el.cellIndex;
+  let y = $el.parentElement.rowIndex;
+  if (maze[y][x] !== 0 && maze[y][x] !== 'w') {
+    return;
+  }
+  $el.classList.toggle(LEGEND.w);
+  if (maze[y][x] === 0) {
+    maze[y][x] = 'w';
+    $el.innerHTML = 'w';
+  } else {
+    maze[y][x] = 0;
+    $el.innerHTML = 0;
   }
 }
 
-function findExit(matrix) {
-  let move = 1;
-  let nextCells = [startCell];
-
-  while (nextCells.length) {
-    nextCells = nextCells
-      .map(cell => {
-        return moveToNeighbours(cell, matrix, move);
-      })
-      .flat();
-
-    move++;
+function changeStart(event) {
+  const $el = event.target;
+  let x = $el.cellIndex;
+  let y = $el.parentElement.rowIndex;
+  if (maze[y][x] !== 0) {
+    return;
   }
+  $el.classList.toggle(LEGEND.s);
+  $el.innerHTML = 's';
+  maze[y][x] = 's';
+
+  maze[startCell.y][startCell.x] = 0;
+  startCell.element.innerHTML = 0;
+  startCell.element.classList.toggle(LEGEND.s);
+
+  startCell.element = $el;
+  startCell.y = y;
+  startCell.x = x;
 }
 
-function moveToNeighbours(cell, matrix, move) {
-  let cells = [
-    moveUp(cell[0], cell[1], matrix, move),
-    moveDown(cell[0], cell[1], matrix, move),
-    moveLeft(cell[0], cell[1], matrix, move),
-    moveRight(cell[0], cell[1], matrix, move)
-  ];
-
-  return cells.filter(cell => cell !== null);
-}
-
-function moveUp(x, y, matrix, move) {
-  return moveTo(x, y - 1, matrix, move);
-}
-
-function moveDown(x, y, matrix, move) {
-  return moveTo(x, y + 1, matrix, move);
-}
-
-function moveLeft(x, y, matrix, move) {
-  return moveTo(x - 1, y, matrix, move);
-}
-
-function moveRight(x, y, matrix, move) {
-  return moveTo(x + 1, y, matrix, move);
-}
-
-function moveTo(x, y, matrix, move) {
-  let cell = matrix[y] && matrix[y][x];
-
-  if (cell === SETTINGS.cellState.finish) {
-    console.log('finish');
-
-    return null;
+function changeFinish(event) {
+  const $el = event.target;
+  let x = $el.cellIndex;
+  let y = $el.parentElement.rowIndex;
+  if (maze[y][x] !== 0) {
+    return;
   }
+  $el.classList.toggle(LEGEND.f);
+  $el.innerHTML = 'f';
+  maze[y][x] = 'f';
 
-  if (cell === SETTINGS.cellState.free) {
-    $cellElements[y * SETTINGS.rows + x].innerHTML = move;
-    matrix[y][x] = SETTINGS.cellState.visited;
+  maze[finishCell.y][finishCell.x] = 0;
+  finishCell.element.innerHTML = 0;
+  finishCell.element.classList.toggle(LEGEND.f);
 
-    return [x, y];
-  }
-
-  return null;
+  finishCell.element = $el;
+  finishCell.y = y;
+  finishCell.x = x;
 }
