@@ -23,6 +23,7 @@ const maze = INIT_MAZE.slice();
 const startCell = { x: 0, y: 2 };
 const finishCell = { x: 7, y: 7 };
 let changeSell = changeWall;
+let canReach = false;
 
 window.addEventListener('load', init);
 
@@ -162,7 +163,6 @@ function findBestWay() {
   let turn = 1;
 
   while (cellsInTurn.length) {
-
     let workArray = [];
     cellsInTurn.forEach(cell => {
       let x = cell[0];
@@ -172,37 +172,34 @@ function findBestWay() {
     });
     turn++;
     cellsInTurn = workArray;
-    
   }
 
-  drawBackWay(table);
+  if (canReach) {
+    drawBackWay(table);
+  } else {
+    alert('no way');
+  }
 }
 
 function oneMove(table, x, y, turn) {
   let currentTurn = [];
-
-  if (maze[y - 1] && maze[y - 1][x] === 0) {
-    currentTurn.push([x, y - 1]);
-    table.rows[y - 1].cells[x].innerHTML = turn;
-    maze[y - 1][x] = turn;
-  }
-  if (maze[y + 1] && maze[y + 1][x] === 0) {
-    currentTurn.push([x, y + 1]);
-    table.rows[y + 1].cells[x].innerHTML = turn;
-    maze[y + 1][x] = turn;
-  }
-  if (maze[y][x - 1] === 0) {
-    currentTurn.push([x - 1, y]);
-    table.rows[y].cells[x - 1].innerHTML = turn;
-    maze[y][x - 1] = turn;
-  }
-  if (maze[y][x + 1] === 0) {
-    currentTurn.push([x + 1, y]);
-    table.rows[y].cells[x + 1].innerHTML = turn;
-    maze[y][x + 1] = turn;
-  }
-
+  simpleMove(table, x, y - 1, turn, currentTurn);
+  simpleMove(table, x, y + 1, turn, currentTurn);
+  simpleMove(table, x - 1, y, turn, currentTurn);
+  simpleMove(table, x + 1, y, turn, currentTurn);
+  
   return currentTurn;
+}
+
+function simpleMove(table, xX, yY, turn, currentTurn) {
+  if (maze[yY] && maze[yY][xX] === 'f') {
+    canReach = true;
+  }
+  if (maze[yY] && maze[yY][xX] === 0) {
+    table.rows[yY].cells[xX].innerHTML = turn;
+    maze[yY][xX] = turn;
+    currentTurn.push([xX, yY]);
+  }
 }
 
 function drawBackWay(table) {
@@ -211,7 +208,7 @@ function drawBackWay(table) {
   let bestNumber;
   let nextX;
   let nextY;
-  
+
   while (bestNumber !== 1) {
     if (maze[y - 1] && typeof maze[y - 1][x] === 'number') {
       bestNumber = maze[y - 1][x];
