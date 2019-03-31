@@ -1,248 +1,248 @@
 'use strict';
 
-const LEGEND = {
-  s: 'cell__start',
-  f: 'cell__finish',
-  w: 'cell__wall',
-  r: 'cell__route'
-};
-
-const INIT_SETTINGS = { xSize: 20, ySize: 20 };
-// const INIT_MAZE = [
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   ['s', 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   [0, 0, 0, 'w', 'w', 'w', 0, 0, 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 'f', 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-// ];
-// const maze = INIT_MAZE.slice();
-const startCell = { x: 0, y: 0 };
-const finishCell = { x: 7, y: 7 };
-const maze = createMaze(INIT_SETTINGS, startCell, finishCell);
-
-let changeSell = changeWall;
-let canReach = false;
-
 window.addEventListener('load', init);
 
 function init() {
+  const LEGEND = {
+    s: 'cell__start',
+    f: 'cell__finish',
+    w: 'cell__wall',
+    r: 'cell__route'
+  };
+
+  const INIT_SETTINGS = { xSize: 20, ySize: 20 };
+
+  const startCell = { x: 0, y: 0 };
+  const finishCell = { x: INIT_SETTINGS.xSize - 1, y: INIT_SETTINGS.ySize - 1 };
+  const maze = createMaze(INIT_SETTINGS, startCell, finishCell);
+
   renderMaze();
   createButtons();
-}
 
-function createMaze(settings, startCell, finishCell) {
-  const mazeArr = new Array(settings.ySize);
-  const mazeRow = new Array(settings.xSize);
-  mazeRow.fill(0);
-  
-  for (let i = 0; i < mazeArr.length; i++) {
-    mazeArr[i] = mazeRow.slice();
-  }
+  let changeSell = changeWall;
+  let canReach = false;
 
-  mazeArr[startCell.y][startCell.x] = 's';
-  mazeArr[finishCell.y][finishCell.x] = 'f';
+  function createMaze(settings, startCell, finishCell) {
+    const mazeArr = new Array(settings.ySize);
+    const mazeRow = new Array(settings.xSize);
+    mazeRow.fill(0);
 
-  return mazeArr;
-}
-
-function renderMaze() {
-  const mazePlace = document.getElementById('gameTable');
-  const table = document.createElement('table');
-
-  for (let y = 0; y < INIT_SETTINGS.ySize; y++) {
-    const tr = document.createElement('tr');
-
-    for (let x = 0; x < INIT_SETTINGS.xSize; x++) {
-      const td = document.createElement('td');
-
-      if (typeof maze[y][x] !== 'number') {
-        if (maze[y][x] === 's') {
-          startCell.element = td;
-        }
-        if (maze[y][x] === 'f') {
-          finishCell.element = td;
-        }
-        td.className = LEGEND[maze[y][x]];
-      } else {
-        if (maze[y][x]) {
-          td.innerHTML = maze[y][x];
-        }
-      }
-
-      tr.append(td);
+    for (let i = 0; i < mazeArr.length; i++) {
+      mazeArr[i] = mazeRow.slice();
     }
 
-    table.append(tr);
+    mazeArr[startCell.y][startCell.x] = 's';
+    mazeArr[finishCell.y][finishCell.x] = 'f';
+
+    return mazeArr;
   }
 
-  mazePlace.append(table);
-  table.addEventListener('mousedown', event => {
-    changeSell(event);
-  }); //
-}
+  function renderMaze() {
+    const mazePlace = document.getElementById('gameTable');
+    mazePlace.innerHTML = '';
+    const tableMaze = document.createElement('table');
 
-function createButtons() {
-  const menu = document.querySelector('.menu');
-  const setStart = document.createElement('button');
-  setStart.innerHTML = 'Set start';
-  menu.append(setStart);
-  setStart.addEventListener('click', () => {
-    changeSell = changeStart;
-  });
+    for (let y = 0; y < INIT_SETTINGS.ySize; y++) {
+      const tr = document.createElement('tr');
 
-  const setFinish = document.createElement('button');
-  setFinish.innerHTML = 'Set finish';
-  menu.append(setFinish);
-  setFinish.addEventListener('click', () => {
-    changeSell = changeFinish;
-  });
+      for (let x = 0; x < INIT_SETTINGS.xSize; x++) {
+        const td = document.createElement('td');
 
-  const setWall = document.createElement('button');
-  setWall.innerHTML = 'Set wall';
-  menu.append(setWall);
-  setWall.addEventListener('click', () => {
-    changeSell = changeWall;
-  });
+        if (typeof maze[y][x] !== 'number') {
+          if (maze[y][x] === 's') {
+            startCell.element = td;
+          }
+          if (maze[y][x] === 'f') {
+            finishCell.element = td;
+          }
+          td.className = LEGEND[maze[y][x]];
+        } else {
+          if (maze[y][x]) {
+            td.innerHTML = maze[y][x];
+          }
+        }
 
-  const startSearh = document.createElement('button');
-  startSearh.innerHTML = 'Find way';
-  menu.append(startSearh);
-  startSearh.addEventListener('click', findBestWay);
-}
+        tr.append(td);
+      }
 
-function changeWall(event) {
-  const $el = event.target;
-  let x = $el.cellIndex;
-  let y = $el.parentElement.rowIndex;
-  if (maze[y][x] !== 0 && maze[y][x] !== 'w') {
-    return;
+      tableMaze.append(tr);
+    }
+
+    mazePlace.append(tableMaze);
+    tableMaze.addEventListener('mousedown', event => {
+      changeSell(event);
+    }); //
   }
-  $el.classList.toggle(LEGEND.w);
-  if (maze[y][x] === 0) {
-    maze[y][x] = 'w';
-  } else {
-    maze[y][x] = 0;
-  }
-}
 
-function changeStart(event) {
-  const $el = event.target;
-  let x = $el.cellIndex;
-  let y = $el.parentElement.rowIndex;
-  if (maze[y][x] !== 0) {
-    return;
-  }
-  $el.classList.toggle(LEGEND.s);
-  maze[y][x] = 's';
-
-  maze[startCell.y][startCell.x] = 0;
-  startCell.element.classList.toggle(LEGEND.s);
-
-  startCell.element = $el;
-  startCell.y = y;
-  startCell.x = x;
-}
-
-function changeFinish(event) {
-  const $el = event.target;
-  let x = $el.cellIndex;
-  let y = $el.parentElement.rowIndex;
-  if (maze[y][x] !== 0) {
-    return;
-  }
-  $el.classList.toggle(LEGEND.f);
-  maze[y][x] = 'f';
-
-  maze[finishCell.y][finishCell.x] = 0;
-  finishCell.element.classList.toggle(LEGEND.f);
-
-  finishCell.element = $el;
-  finishCell.y = y;
-  finishCell.x = x;
-}
-
-function findBestWay() {
-  const table = document.getElementById('gameTable').firstChild;
-  let { x, y } = startCell;
-
-  let cellsInTurn = [[x, y]];
-  let turn = 1;
-
-  function doSteps() {
-    let workArray = [];
-    cellsInTurn.forEach(cell => {
-      let x = cell[0];
-      let y = cell[1];
-      let turnResult = oneMove(table, x, y, turn);
-      workArray.push(...turnResult);
+  function createButtons() {
+    const menu = document.querySelector('.menu');
+    const setStart = document.createElement('button');
+    setStart.innerHTML = 'Set start';
+    menu.append(setStart);
+    setStart.addEventListener('click', () => {
+      changeSell = changeStart;
     });
-    turn++;
-    cellsInTurn = workArray;
 
-    if (cellsInTurn.length) {
-      setTimeout(doSteps, 100);
+    const setFinish = document.createElement('button');
+    setFinish.innerHTML = 'Set finish';
+    menu.append(setFinish);
+    setFinish.addEventListener('click', () => {
+      changeSell = changeFinish;
+    });
+
+    const setWall = document.createElement('button');
+    setWall.innerHTML = 'Set wall';
+    menu.append(setWall);
+    setWall.addEventListener('click', () => {
+      changeSell = changeWall;
+    });
+
+    const startSearh = document.createElement('button');
+    startSearh.innerHTML = 'Find way';
+    menu.append(startSearh);
+    startSearh.addEventListener('click', findBestWay);
+  }
+
+  function changeWall(event) {
+    const $el = event.target;
+    let x = $el.cellIndex;
+    let y = $el.parentElement.rowIndex;
+    if (isNaN(maze[y][x]) && maze[y][x] !== 'w') {
+      return;
+    }
+    // $el.classList.toggle(LEGEND.w);
+    $el.className = LEGEND.w;
+    if (!isNaN(maze[y][x])) {
+      maze[y][x] = 'w';
     } else {
-      if (canReach) {
-        drawBackWay(table);
-      } else {
-        alert('no way');
-      }
+      maze[y][x] = 0;
+      $el.className = '';
     }
   }
-  doSteps();
-}
 
-function oneMove(table, x, y, turn) {
-  let currentTurn = [];
-  simpleMove(table, x, y - 1, turn, currentTurn);
-  simpleMove(table, x, y + 1, turn, currentTurn);
-  simpleMove(table, x - 1, y, turn, currentTurn);
-  simpleMove(table, x + 1, y, turn, currentTurn);
+  function changeStart(event) {
+    const $el = event.target;
+    let x = $el.cellIndex;
+    let y = $el.parentElement.rowIndex;
+    if (maze[y][x] !== 0) {
+      return;
+    }
+    $el.classList.toggle(LEGEND.s);
+    maze[y][x] = 's';
 
-  return currentTurn;
-}
+    maze[startCell.y][startCell.x] = 0;
+    startCell.element.classList.toggle(LEGEND.s);
 
-function simpleMove(table, xX, yY, turn, currentTurn) {
-  if (maze[yY] && maze[yY][xX] === 'f') {
-    canReach = true;
+    startCell.element = $el;
+    startCell.y = y;
+    startCell.x = x;
   }
-  if (maze[yY] && maze[yY][xX] === 0) {
-    table.rows[yY].cells[xX].innerHTML = turn;
-    maze[yY][xX] = turn;
-    currentTurn.push([xX, yY]);
+
+  function changeFinish(event) {
+    const $el = event.target;
+    let x = $el.cellIndex;
+    let y = $el.parentElement.rowIndex;
+    if (maze[y][x] !== 0) {
+      return;
+    }
+    $el.classList.toggle(LEGEND.f);
+    maze[y][x] = 'f';
+
+    maze[finishCell.y][finishCell.x] = 0;
+    finishCell.element.classList.toggle(LEGEND.f);
+
+    finishCell.element = $el;
+    finishCell.y = y;
+    finishCell.x = x;
   }
-}
 
-function drawBackWay(table) {
-  let x = finishCell.x;
-  let y = finishCell.y;
-  const bestNumber = { nextX: 0, nextY: 0, value: Infinity };
+  function findBestWay() {
+    for (let y = 0; y < maze.length; y++) {
+      for (let x = 0; x < maze[y].length; x++) {
+        if (!isNaN(maze[y][x])) {
+          maze[y][x] = 0;
+        }
+      }
+    }
+    renderMaze();
+    const table = document.getElementById('gameTable').firstChild;
 
-  while (bestNumber.value !== 1) {
-    doBackStep(x, y - 1, bestNumber);
-    doBackStep(x, y + 1, bestNumber);
-    doBackStep(x - 1, y, bestNumber);
-    doBackStep(x + 1, y, bestNumber);
+    let { x, y } = startCell;
 
-    table.rows[bestNumber.nextY].cells[bestNumber.nextX].classList.toggle(
-      'cell__route'
-    );
-    x = bestNumber.nextX;
-    y = bestNumber.nextY;
+    let cellsInTurn = [[x, y]];
+    let turn = 1;
+
+    function doSteps() {
+      let workArray = [];
+      cellsInTurn.forEach(cell => {
+        let x = cell[0];
+        let y = cell[1];
+        let turnResult = oneMove(table, x, y, turn);
+        workArray.push(...turnResult);
+      });
+      turn++;
+      cellsInTurn = workArray;
+
+      if (cellsInTurn.length) {
+        setTimeout(doSteps, 100);
+      } else {
+        if (canReach) {
+          drawBackWay(table);
+        } else {
+          alert('no way');
+        }
+      }
+    }
+    doSteps();
   }
-}
 
-function doBackStep(xX, yY, bestNumber) {
-  if (maze[yY] && typeof maze[yY][xX] === 'number') {
-    if (bestNumber.value > maze[yY][xX]) {
-      bestNumber.value = maze[yY][xX];
-      bestNumber.nextX = xX;
-      bestNumber.nextY = yY;
+  function oneMove(table, x, y, turn) {
+    let currentTurn = [];
+    simpleMove(table, x, y - 1, turn, currentTurn);
+    simpleMove(table, x, y + 1, turn, currentTurn);
+    simpleMove(table, x - 1, y, turn, currentTurn);
+    simpleMove(table, x + 1, y, turn, currentTurn);
+
+    return currentTurn;
+  }
+
+  function simpleMove(table, xX, yY, turn, currentTurn) {
+    if (maze[yY] && maze[yY][xX] === 'f') {
+      canReach = true;
+    }
+    if (maze[yY] && maze[yY][xX] === 0) {
+      table.rows[yY].cells[xX].innerHTML = turn;
+      maze[yY][xX] = turn;
+      currentTurn.push([xX, yY]);
+    }
+  }
+
+  function drawBackWay(table) {
+    let x = finishCell.x;
+    let y = finishCell.y;
+    const bestNumber = { nextX: 0, nextY: 0, value: Infinity };
+
+    while (bestNumber.value !== 1) {
+      doBackStep(x, y - 1, bestNumber);
+      doBackStep(x, y + 1, bestNumber);
+      doBackStep(x - 1, y, bestNumber);
+      doBackStep(x + 1, y, bestNumber);
+
+      table.rows[bestNumber.nextY].cells[bestNumber.nextX].classList.toggle(
+        'cell__route'
+      );
+      x = bestNumber.nextX;
+      y = bestNumber.nextY;
+    }
+  }
+
+  function doBackStep(xX, yY, bestNumber) {
+    if (maze[yY] && typeof maze[yY][xX] === 'number') {
+      if (bestNumber.value > maze[yY][xX]) {
+        bestNumber.value = maze[yY][xX];
+        bestNumber.nextX = xX;
+        bestNumber.nextY = yY;
+      }
     }
   }
 }
