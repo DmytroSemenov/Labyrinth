@@ -7,22 +7,23 @@ const LEGEND = {
   r: 'cell__route'
 };
 
-const INIT_SETTINGS = { xSize: 10, ySize: 10 };
-const INIT_MAZE = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  ['s', 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 'w', 'w', 'w', 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 'f', 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-];
-const maze = INIT_MAZE.slice();
-const startCell = { x: 0, y: 2 };
+const INIT_SETTINGS = { xSize: 20, ySize: 20 };
+// const INIT_MAZE = [
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   ['s', 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   [0, 0, 0, 'w', 'w', 'w', 0, 0, 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 'f', 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+//   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+// ];
+// const maze = INIT_MAZE.slice();
+const startCell = { x: 0, y: 0 };
 const finishCell = { x: 7, y: 7 };
+const maze = createMaze(INIT_SETTINGS, startCell, finishCell);
 
 let changeSell = changeWall;
 let canReach = false;
@@ -30,11 +31,26 @@ let canReach = false;
 window.addEventListener('load', init);
 
 function init() {
-  createMaze();
+  renderMaze();
   createButtons();
 }
 
-function createMaze() {
+function createMaze(settings, startCell, finishCell) {
+  const mazeArr = new Array(settings.ySize);
+  const mazeRow = new Array(settings.xSize);
+  mazeRow.fill(0);
+  
+  for (let i = 0; i < mazeArr.length; i++) {
+    mazeArr[i] = mazeRow.slice();
+  }
+
+  mazeArr[startCell.y][startCell.x] = 's';
+  mazeArr[finishCell.y][finishCell.x] = 'f';
+
+  return mazeArr;
+}
+
+function renderMaze() {
   const mazePlace = document.getElementById('gameTable');
   const table = document.createElement('table');
 
@@ -109,10 +125,8 @@ function changeWall(event) {
   $el.classList.toggle(LEGEND.w);
   if (maze[y][x] === 0) {
     maze[y][x] = 'w';
-    // $el.innerHTML = 'w';
   } else {
     maze[y][x] = 0;
-    // $el.innerHTML = 0;
   }
 }
 
@@ -124,11 +138,9 @@ function changeStart(event) {
     return;
   }
   $el.classList.toggle(LEGEND.s);
-  // $el.innerHTML = 's';
   maze[y][x] = 's';
 
   maze[startCell.y][startCell.x] = 0;
-  // startCell.element.innerHTML = 0;
   startCell.element.classList.toggle(LEGEND.s);
 
   startCell.element = $el;
@@ -144,11 +156,9 @@ function changeFinish(event) {
     return;
   }
   $el.classList.toggle(LEGEND.f);
-  // $el.innerHTML = 'f';
   maze[y][x] = 'f';
 
   maze[finishCell.y][finishCell.x] = 0;
-  // finishCell.element.innerHTML = 0;
   finishCell.element.classList.toggle(LEGEND.f);
 
   finishCell.element = $el;
@@ -162,9 +172,8 @@ function findBestWay() {
 
   let cellsInTurn = [[x, y]];
   let turn = 1;
-  f();
 
-  function f() {
+  function doSteps() {
     let workArray = [];
     cellsInTurn.forEach(cell => {
       let x = cell[0];
@@ -176,7 +185,7 @@ function findBestWay() {
     cellsInTurn = workArray;
 
     if (cellsInTurn.length) {
-      setTimeout(f, 200);
+      setTimeout(doSteps, 100);
     } else {
       if (canReach) {
         drawBackWay(table);
@@ -185,6 +194,7 @@ function findBestWay() {
       }
     }
   }
+  doSteps();
 }
 
 function oneMove(table, x, y, turn) {
@@ -211,43 +221,28 @@ function simpleMove(table, xX, yY, turn, currentTurn) {
 function drawBackWay(table) {
   let x = finishCell.x;
   let y = finishCell.y;
-  let bestNumber;
-  let nextX;
-  let nextY;
+  const bestNumber = { nextX: 0, nextY: 0, value: Infinity };
 
-  while (bestNumber !== 1) {
-    if (maze[y - 1] && typeof maze[y - 1][x] === 'number') {
-      bestNumber = maze[y - 1][x];
-      nextX = x;
-      nextY = y - 1;
+  while (bestNumber.value !== 1) {
+    doBackStep(x, y - 1, bestNumber);
+    doBackStep(x, y + 1, bestNumber);
+    doBackStep(x - 1, y, bestNumber);
+    doBackStep(x + 1, y, bestNumber);
+
+    table.rows[bestNumber.nextY].cells[bestNumber.nextX].classList.toggle(
+      'cell__route'
+    );
+    x = bestNumber.nextX;
+    y = bestNumber.nextY;
+  }
+}
+
+function doBackStep(xX, yY, bestNumber) {
+  if (maze[yY] && typeof maze[yY][xX] === 'number') {
+    if (bestNumber.value > maze[yY][xX]) {
+      bestNumber.value = maze[yY][xX];
+      bestNumber.nextX = xX;
+      bestNumber.nextY = yY;
     }
-
-    if (maze[y + 1] && typeof maze[y + 1][x] === 'number') {
-      if (bestNumber > maze[y + 1][x]) {
-        bestNumber = maze[y + 1][x];
-        nextX = x;
-        nextY = y + 1;
-      }
-    }
-
-    if (maze[y] && typeof maze[y][x - 1] === 'number') {
-      if (bestNumber > maze[y][x - 1]) {
-        bestNumber = maze[y][x - 1];
-        nextX = x - 1;
-        nextY = y;
-      }
-    }
-
-    if (maze[y] && typeof maze[y][x + 1] === 'number') {
-      if (bestNumber > maze[y][x + 1]) {
-        bestNumber = maze[y][x + 1];
-        nextX = x + 1;
-        nextY = y;
-      }
-    }
-
-    table.rows[nextY].cells[nextX].classList.toggle('cell__route');
-    x = nextX;
-    y = nextY;
   }
 }
