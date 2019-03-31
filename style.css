@@ -1,0 +1,49 @@
+* {
+  box-sizing: border-box;
+}
+.game {
+  display: table;
+  margin: 50px auto;
+}
+table {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+td {
+  background-color: #fff;
+  width: 30px;
+  height: 30px;
+  border: 1px solid black;
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.cell__start {
+  background-color: #0a0;
+  /* color: #0a0; */
+}
+
+.cell__finish {
+  background-color: #a00;
+  /* color: #a00; */
+}
+
+.cell__wall {
+  background-color: #000;
+  /* color: #000; */
+}
+
+.cell__route {
+  background-color: #ff0;
+  color: #000;
+}
+.menu {
+  display: flex;
+  justify-content: center;
+}
+button {
+  margin: 10px;
+}
