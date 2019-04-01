@@ -10,10 +10,10 @@ function init() {
     r: 'cell__route'
   };
 
-  const INIT_SETTINGS = { xSize: 20, ySize: 20 };
+  const INIT_SETTINGS = { xSize: 81, ySize: 31 };
 
-  const startCell = { x: 0, y: 0 };
-  const finishCell = { x: INIT_SETTINGS.xSize - 1, y: INIT_SETTINGS.ySize - 1 };
+  const startCell = { x: 1, y: 1 };
+  const finishCell = { x: INIT_SETTINGS.xSize - 2, y: INIT_SETTINGS.ySize - 2 };
   const maze = createMaze(INIT_SETTINGS, startCell, finishCell);
 
   renderMaze();
@@ -25,16 +25,60 @@ function init() {
   function createMaze(settings, startCell, finishCell) {
     const mazeArr = new Array(settings.ySize);
     const mazeRow = new Array(settings.xSize);
-    mazeRow.fill(0);
+    mazeRow.fill('w');
 
     for (let i = 0; i < mazeArr.length; i++) {
       mazeArr[i] = mazeRow.slice();
     }
 
     mazeArr[startCell.y][startCell.x] = 's';
-    mazeArr[finishCell.y][finishCell.x] = 'f';
+    let finMaze = generateWaysInMaze(mazeArr);
+    finMaze[finishCell.y][finishCell.x] = 'f';
+
+    return finMaze;
+  }
+
+  function generateWaysInMaze(mazeArr) {
+    let current = startCell;
+    let way = [current];
+
+    while (way.length !== 0) {
+      digForward();
+      way.pop();
+      current = way.pop();
+    }
 
     return mazeArr;
+
+    function digForward() {
+      let probableWays = [];
+      do {
+        let x = current.x;
+        let y = current.y;
+        probableWays = [];
+
+        if (mazeArr[y - 2] && mazeArr[y - 2][x] === 'w') {
+          probableWays.push({ x, y: y - 2, mid: { x, y: y - 1 } });
+        }
+        if (mazeArr[y + 2] && mazeArr[y + 2][x] === 'w') {
+          probableWays.push({ x, y: y + 2, mid: { x, y: y + 1 } });
+        }
+        if (mazeArr[y][x - 2] === 'w') {
+          probableWays.push({ x: x - 2, y, mid: { x: x - 1, y } });
+        }
+        if (mazeArr[y][x + 2] === 'w') {
+          probableWays.push({ x: x + 2, y, mid: { x: x + 1, y } });
+        }
+        if (probableWays.length !== 0) {
+          current =
+            probableWays[Math.round(Math.random() * (probableWays.length - 1))];
+          mazeArr[current.y][current.x] = 0;
+          mazeArr[current.mid.y][current.mid.x] = 0;
+          way.push(current);
+        }
+      } while (probableWays.length);
+    }
+    return;
   }
 
   function renderMaze() {
@@ -110,7 +154,6 @@ function init() {
     if (isNaN(maze[y][x]) && maze[y][x] !== 'w') {
       return;
     }
-    // $el.classList.toggle(LEGEND.w);
     $el.className = LEGEND.w;
     if (!isNaN(maze[y][x])) {
       maze[y][x] = 'w';
@@ -184,7 +227,7 @@ function init() {
       cellsInTurn = workArray;
 
       if (cellsInTurn.length) {
-        setTimeout(doSteps, 100);
+        setTimeout(doSteps, 20);
       } else {
         if (canReach) {
           drawBackWay(table);
@@ -220,7 +263,7 @@ function init() {
   function drawBackWay(table) {
     let x = finishCell.x;
     let y = finishCell.y;
-    const bestNumber = { nextX: 0, nextY: 0, value: Infinity };
+    const bestNumber = { nextX: x, nextY: y, value: Infinity };
 
     while (bestNumber.value !== 1) {
       doBackStep(x, y - 1, bestNumber);
@@ -237,7 +280,7 @@ function init() {
   }
 
   function doBackStep(xX, yY, bestNumber) {
-    if (maze[yY] && typeof maze[yY][xX] === 'number') {
+    if (maze[yY] && !isNaN(maze[yY][xX]) && maze[yY][xX] !== 0) {
       if (bestNumber.value > maze[yY][xX]) {
         bestNumber.value = maze[yY][xX];
         bestNumber.nextX = xX;
