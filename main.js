@@ -31,8 +31,8 @@ function init() {
       mazeArr[i] = mazeRow.slice();
     }
 
-    mazeArr[startCell.y][startCell.x] = 's';
     let finMaze = generateWaysInMaze(mazeArr);
+    finMaze[startCell.y][startCell.x] = 's';
     finMaze[finishCell.y][finishCell.x] = 'f';
 
     return finMaze;
@@ -44,7 +44,6 @@ function init() {
 
     while (way.length !== 0) {
       digForward();
-      way.pop();
       current = way.pop();
     }
 
@@ -78,7 +77,6 @@ function init() {
         }
       } while (probableWays.length);
     }
-    return;
   }
 
   function renderMaze() {
@@ -167,14 +165,12 @@ function init() {
     const $el = event.target;
     let x = $el.cellIndex;
     let y = $el.parentElement.rowIndex;
-    if (maze[y][x] !== 0) {
-      return;
-    }
-    $el.classList.toggle(LEGEND.s);
+   
+    $el.className = LEGEND.s;
     maze[y][x] = 's';
 
     maze[startCell.y][startCell.x] = 0;
-    startCell.element.classList.toggle(LEGEND.s);
+    startCell.element.classList.remove(LEGEND.s);
 
     startCell.element = $el;
     startCell.y = y;
@@ -185,10 +181,8 @@ function init() {
     const $el = event.target;
     let x = $el.cellIndex;
     let y = $el.parentElement.rowIndex;
-    if (maze[y][x] !== 0) {
-      return;
-    }
-    $el.classList.toggle(LEGEND.f);
+    
+    $el.className = LEGEND.f;
     maze[y][x] = 'f';
 
     maze[finishCell.y][finishCell.x] = 0;
@@ -232,7 +226,7 @@ function init() {
         if (canReach) {
           drawBackWay(table);
         } else {
-          alert('no way');
+          alert('can not reach finish');
         }
       }
     }
@@ -265,7 +259,7 @@ function init() {
     let y = finishCell.y;
     const bestNumber = { nextX: x, nextY: y, value: Infinity };
 
-    while (bestNumber.value !== 1) {
+    function drawOneStep() {
       doBackStep(x, y - 1, bestNumber);
       doBackStep(x, y + 1, bestNumber);
       doBackStep(x - 1, y, bestNumber);
@@ -276,7 +270,12 @@ function init() {
       );
       x = bestNumber.nextX;
       y = bestNumber.nextY;
+
+      if (bestNumber.value !== 1) {
+        setTimeout(drawOneStep, 20);
+      }
     }
+    drawOneStep();
   }
 
   function doBackStep(xX, yY, bestNumber) {
