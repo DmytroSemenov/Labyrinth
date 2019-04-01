@@ -10,29 +10,25 @@ function init() {
     r: 'cell__route'
   };
 
-  // const INIT_SETTINGS = { xSize: 81, ySize: 31 };
-  const INIT_SETTINGS = {};
+  const mazeDimenshions = {};
   const startCell = { x: 1, y: 1 };
   const finishCell = {};
   let maze = [];
-
-  const inputForm = document.forms[0];
+  let changeSell = changeWall;
+  let canReach = false;
 
   document.getElementById('start').addEventListener('click', () => {
-    INIT_SETTINGS.xSize = +inputForm.elements.xSize.value;
-    INIT_SETTINGS.ySize = +inputForm.elements.ySize.value;
-   
-    finishCell.x = INIT_SETTINGS.xSize - 2;
-    finishCell.y = INIT_SETTINGS.ySize - 2;
+    mazeDimenshions.xSize = +document.forms[0].elements.xSize.value;
+    mazeDimenshions.ySize = +document.forms[0].elements.ySize.value;
 
-    maze = createMaze(INIT_SETTINGS, startCell, finishCell);
+    finishCell.x = mazeDimenshions.xSize - 2;
+    finishCell.y = mazeDimenshions.ySize - 2;
+
+    maze = createMaze(mazeDimenshions, startCell, finishCell);
 
     renderMaze();
     createButtons();
   });
-
-  let changeSell = changeWall;
-  let canReach = false;
 
   function createMaze(settings, startCell, finishCell) {
     const mazeArr = new Array(settings.ySize);
@@ -96,10 +92,10 @@ function init() {
     mazePlace.innerHTML = '';
     const tableMaze = document.createElement('table');
 
-    for (let y = 0; y < INIT_SETTINGS.ySize; y++) {
+    for (let y = 0; y < mazeDimenshions.ySize; y++) {
       const tr = document.createElement('tr');
 
-      for (let x = 0; x < INIT_SETTINGS.xSize; x++) {
+      for (let x = 0; x < mazeDimenshions.xSize; x++) {
         const td = document.createElement('td');
 
         if (typeof maze[y][x] !== 'number') {
@@ -153,7 +149,7 @@ function init() {
     });
 
     const startSearh = document.createElement('button');
-    startSearh.innerHTML = '<--Find the way-->';
+    startSearh.innerHTML = '<--Find the shortest path-->';
     menu.append(startSearh);
     startSearh.addEventListener('click', findBestWay);
   }
