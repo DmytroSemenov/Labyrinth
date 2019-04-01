@@ -10,14 +10,26 @@ function init() {
     r: 'cell__route'
   };
 
-  const INIT_SETTINGS = { xSize: 81, ySize: 31 };
-
+  // const INIT_SETTINGS = { xSize: 81, ySize: 31 };
+  const INIT_SETTINGS = {};
   const startCell = { x: 1, y: 1 };
-  const finishCell = { x: INIT_SETTINGS.xSize - 2, y: INIT_SETTINGS.ySize - 2 };
-  const maze = createMaze(INIT_SETTINGS, startCell, finishCell);
+  const finishCell = {};
+  let maze = [];
 
-  renderMaze();
-  createButtons();
+  const inputForm = document.forms[0];
+
+  document.getElementById('start').addEventListener('click', () => {
+    INIT_SETTINGS.xSize = +inputForm.elements.xSize.value;
+    INIT_SETTINGS.ySize = +inputForm.elements.ySize.value;
+   
+    finishCell.x = INIT_SETTINGS.xSize - 2;
+    finishCell.y = INIT_SETTINGS.ySize - 2;
+
+    maze = createMaze(INIT_SETTINGS, startCell, finishCell);
+
+    renderMaze();
+    createButtons();
+  });
 
   let changeSell = changeWall;
   let canReach = false;
@@ -118,6 +130,7 @@ function init() {
 
   function createButtons() {
     const menu = document.querySelector('.menu');
+    menu.innerHTML = '';
     const setStart = document.createElement('button');
     setStart.innerHTML = 'Set start';
     menu.append(setStart);
@@ -140,7 +153,7 @@ function init() {
     });
 
     const startSearh = document.createElement('button');
-    startSearh.innerHTML = 'Find way';
+    startSearh.innerHTML = '<--Find the way-->';
     menu.append(startSearh);
     startSearh.addEventListener('click', findBestWay);
   }
@@ -165,7 +178,7 @@ function init() {
     const $el = event.target;
     let x = $el.cellIndex;
     let y = $el.parentElement.rowIndex;
-   
+
     $el.className = LEGEND.s;
     maze[y][x] = 's';
 
@@ -181,7 +194,7 @@ function init() {
     const $el = event.target;
     let x = $el.cellIndex;
     let y = $el.parentElement.rowIndex;
-    
+
     $el.className = LEGEND.f;
     maze[y][x] = 'f';
 

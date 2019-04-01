@@ -9,6 +9,14 @@
   </head>
 
   <body>
+    <form class="dimensions" name="dimensions">
+      <fieldset name="set">
+        <legend>Maze dimensions</legend>
+        <input name="xSize" size="1" value="21" />
+        <input name="ySize" size="1" value="21" />
+        <input id="start" type="button" value="Create maze" />
+      </fieldset>
+    </form>
     <div id="gameTable" class="game" onselectstart="return false"></div>
     <div class="menu"></div>
   </body>
