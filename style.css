@@ -29,6 +29,10 @@ td {
   cursor: pointer;
 }
 
+button {
+  margin: 10px;
+}
+
 .cell__start {
   background-color: #0a0;
   /* color: #0a0; */
@@ -52,6 +56,4 @@ td {
   display: flex;
   justify-content: center;
 }
-button {
-  margin: 10px;
-}
+
